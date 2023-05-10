@@ -4,16 +4,38 @@ const pool = require('../modules/pool');
 
 // This route *should* return the logged in users pets
 router.get('/', (req, res) => {
+    //User is logged in
     console.log('/pet GET route');
+    // req.isAuthenticaed and req.user are provided by Passport. 
     console.log('is authenticated?', req.isAuthenticated());
-    console.log('user', req.user);
-    let queryText = `SELECT * FROM "pets"`;
-    pool.query(queryText).then((result) => {
-        res.send(result.rows);
-    }).catch((error) => {
-        console.log(error);
-        res.sendStatus(500);
-    });
+    // STEP 1. Are we authenticated? 
+    if (req.isAuthenticated()) {
+        console.log('user', req.user);
+        let parameters = [req.user.id];
+        let queryText = `SELECT * FROM "pets" WHERE "user_id" = $1;`;
+
+        // This is authorization, probably wont need for solo projects 
+
+        // if (req.user.access_level > 5) {
+        //     //this user has access to view ALL pets 
+        //     queryText = `SELECT * FROM "pets";`;
+        //     parameters = []; 
+        // }
+        
+        // DO NOT pass the user id from the client for data that requires 
+        // authorization 
+        // STEP 2. Use the logged in users id (req.user.id) to GET the list of pets 
+        pool.query(queryText, parameters).then((result) => {
+            res.send(result.rows);
+        }).catch((error) => {
+            console.log(error);
+            res.sendStatus(500);
+        });
+    } else {
+        // User is not logged in 
+        res.sendStatus(403);
+    }
+
 });
 
 // This route *should* add a pet for the logged in user
@@ -22,7 +44,19 @@ router.post('/', (req, res) => {
     console.log(req.body);
     console.log('is authenticated?', req.isAuthenticated());
     console.log('user', req.user);
-    res.sendStatus(200);
+    if(req.isAuthenticated()) {
+        console.log('user', req.user);
+        let queryText = `INSERT INTO "pets" ("name", "user_id") VALUES ($1, $2);`
+        pool.query(queryText, [req.body.name, req.user.id]).then(results => {
+            res.sendStatus(201);
+        }).catch(error => {
+            console.log(`error ${error}`);
+            res.sendStatus(500);
+        })
+    } else {
+        res.sendStatus(403)
+    }
+
     
 });
 

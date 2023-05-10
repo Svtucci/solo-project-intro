@@ -1,8 +1,9 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+// const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
+
 
 const sessionMiddleware = require('./modules/session-middleware');
 const passport = require('./strategies/user.strategy');
@@ -12,10 +13,11 @@ const userRouter = require('./routes/user.router');
 const petRouter = require('./routes/pets.router');
 
 // Body parser middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
 
 // Passport Session Configuration //
+// Setup and configure the authentication 
 app.use(sessionMiddleware);
 
 // start up passport sessions
@@ -30,7 +32,7 @@ app.use('/api/pets', petRouter)
 app.use(express.static('build'));
 
 // App Set //
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5010;
 
 /** Listen * */
 app.listen(PORT, () => {
